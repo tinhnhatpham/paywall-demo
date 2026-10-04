@@ -1,0 +1,11 @@
+# Netlify: builds the React site in web/
+[build]
+  base = "web"
+  command = "npm run build"
+  publish = "dist"
+
+# Public values only (they end up in the browser). Filled in at deploy time.
+# [build.environment]
+#   VITE_API_URL = "https://<render-backend>.onrender.com"
+#   VITE_SUPABASE_URL = "https://<project>.supabase.co"
+#   VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_..."
