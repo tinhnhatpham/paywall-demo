@@ -4,8 +4,8 @@
   command = "npm run build"
   publish = "dist"
 
-# Public values only (they end up in the browser). Filled in at deploy time.
-# [build.environment]
-#   VITE_API_URL = "https://<render-backend>.onrender.com"
-#   VITE_SUPABASE_URL = "https://<project>.supabase.co"
-#   VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_..."
+# Public values only (they end up in the browser bundle). Never put secret keys here.
+[build.environment]
+  VITE_API_URL = "https://paywall-demo-api.onrender.com"
+  VITE_SUPABASE_URL = "https://iksirkdxcuwppuxaosmn.supabase.co"
+  VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_mq_DMSGJuaVDrrb7E4CK_A_mRUdq9N2"
