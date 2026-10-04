@@ -75,8 +75,8 @@ nav a.active {
   color: var(--sage);
 }
 
-main {
-  padding: 40px 0 56px;
+main.wrap {
+  padding: 40px 16px 56px;
   min-height: 60vh;
 }
 

@@ -100,7 +100,9 @@ def sync_subscription(subscription_id: str) -> None:
         "stripe_subscription_id": sub["id"],
         "status": sub["status"],
         "current_period_end": to_iso(period_end),
-        "cancel_at_period_end": bool(sub.get("cancel_at_period_end")),
+        # Newer Stripe versions schedule a cancellation with a cancel_at date instead of the
+        # cancel_at_period_end flag (the Billing Portal does this), so check both
+        "cancel_at_period_end": bool(sub.get("cancel_at_period_end") or sub.get("cancel_at")),
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }).execute()
 
