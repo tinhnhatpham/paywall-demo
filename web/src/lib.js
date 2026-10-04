@@ -13,11 +13,15 @@ export const ACTIVE_STATUSES = ["active", "trialing"];
 
 /** POST to our Flask backend as the signed-in user. Returns the JSON body or throws. */
 export async function callApi(path, session) {
+  // The free demo server sleeps when idle and can take up to a minute to wake: give up after 90s
+  // instead of spinning forever.
+  const timeout = AbortSignal.timeout(90000);
   let res;
   try {
     res = await fetch(`${API_URL}${path}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${session.access_token}` },
+      signal: timeout,
     });
   } catch {
     throw new Error("Can't reach the server. The free demo server may be waking up: try again in a minute.");

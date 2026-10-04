@@ -7,14 +7,20 @@ export default function Home({ session, isActive }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
+  const [slow, setSlow] = useState(false);
+
   async function subscribe() {
     setBusy(true);
     setError("");
+    const slowTimer = setTimeout(() => setSlow(true), 6000);
     try {
       await goToStripe("/api/checkout", session);
     } catch (err) {
       setError(err.message);
       setBusy(false);
+    } finally {
+      clearTimeout(slowTimer);
+      setSlow(false);
     }
   }
 
@@ -43,6 +49,7 @@ export default function Home({ session, isActive }) {
         </ul>
 
         {error && <p className="error">{error}</p>}
+        {slow && <p className="note">The free demo server is waking up. This can take up to a minute.</p>}
 
         {!session && (
           <Link className="btn" to="/login?mode=signup">

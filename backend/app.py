@@ -66,6 +66,13 @@ def get_or_create_customer(user) -> str:
     return customer.id
 
 
+def get_user_exists(user_id: str) -> bool:
+    try:
+        return db.auth.admin.get_user_by_id(user_id).user is not None
+    except Exception:
+        return False
+
+
 def to_iso(timestamp):
     return datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat() if timestamp else None
 
@@ -93,6 +100,10 @@ def sync_subscription(subscription_id: str) -> None:
     # Newer Stripe API versions keep the billing period on the subscription item
     items = (sub.get("items") or {}).get("data") or []
     period_end = (items[0].get("current_period_end") if items else None) or sub.get("current_period_end")
+
+    if not get_user_exists(user_id):
+        app.logger.info(f"User {user_id} was deleted; ignoring subscription {subscription_id}")
+        return  # e.g. the account was removed before Stripe's final "deleted" event arrived
 
     db.table("subscriptions").upsert({
         "user_id": user_id,
