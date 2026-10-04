@@ -32,7 +32,9 @@ db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SECRET_KEY"]
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 64 * 1024
-CORS(app, origins=[FRONTEND_URL])
+# FRONTEND_URL is where Stripe sends people back to; ALLOWED_ORIGINS lists other addresses the same
+# site is reachable at (e.g. the old netlify.app link), comma-separated
+CORS(app, origins=[FRONTEND_URL] + [o.strip().rstrip("/") for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()])
 
 
 # ---------- helpers ----------
