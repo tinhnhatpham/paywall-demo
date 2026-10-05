@@ -32,9 +32,13 @@ db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SECRET_KEY"]
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 64 * 1024
-# FRONTEND_URL is where Stripe sends people back to; ALLOWED_ORIGINS lists other addresses the same
-# site is reachable at (e.g. the old netlify.app link), comma-separated
-CORS(app, origins=[FRONTEND_URL] + [o.strip().rstrip("/") for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()])
+# The website can be reached at several addresses: FRONTEND_URL, the demo's own public address
+# and any listed in ALLOWED_ORIGINS (comma-separated, e.g. the old netlify.app link)
+SITE_ORIGIN = "https://members.logicagentry.com"
+SITE_ORIGINS = list(dict.fromkeys(
+    [FRONTEND_URL, SITE_ORIGIN] + [o.strip().rstrip("/") for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+))
+CORS(app, origins=SITE_ORIGINS)
 
 
 # ---------- helpers ----------
@@ -48,6 +52,15 @@ def current_user():
         return db.auth.get_user(header.removeprefix("Bearer ")).user
     except Exception:
         return None
+
+
+def site_url() -> str:
+    """Where Stripe should send the visitor back: the address they're using, if it's one of ours.
+
+    Logins are stored per address, so returning someone to a different address would log them out.
+    """
+    origin = (request.headers.get("Origin") or "").rstrip("/")
+    return origin if origin in SITE_ORIGINS else FRONTEND_URL
 
 
 def get_subscription_row(user_id: str):
@@ -142,8 +155,8 @@ def create_checkout():
             line_items=[{"price": PRICE_ID, "quantity": 1}],
             client_reference_id=user.id,
             subscription_data={"metadata": {"user_id": user.id}},
-            success_url=f"{FRONTEND_URL}/members?checkout=success",
-            cancel_url=f"{FRONTEND_URL}/?checkout=cancelled",
+            success_url=f"{site_url()}/members?checkout=success",
+            cancel_url=f"{site_url()}/?checkout=cancelled",
         )
     except stripe.StripeError as e:
         app.logger.error(f"Checkout error: {e}")
@@ -161,7 +174,7 @@ def create_portal():
         return jsonify({"error": "No membership found for this account."}), 404
     try:
         session = stripe.billing_portal.Session.create(
-            customer=row["stripe_customer_id"], return_url=f"{FRONTEND_URL}/account"
+            customer=row["stripe_customer_id"], return_url=f"{site_url()}/account"
         )
     except stripe.StripeError as e:
         app.logger.error(f"Portal error: {e}")
